@@ -17,7 +17,7 @@ output does not recover the signal, and inside the model each axis draws on a di
 attention-head pattern. **Axis-LoRA** places four axis-conditional LoRA branches inside the
 embedding model and combines them with a per-query sparsemax gate:
 
-$$\mathrm{score}(q, m) = \langle z_b(q), z_b(m) \rangle + \alpha \sum_{A} w_A(q)\, \langle \phi_A(q), \phi_A(m) \rangle$$
+$$\mathrm{score}(q, m) = \langle \tilde{\mathbf{z}}_b(q), \tilde{\mathbf{z}}_b(m) \rangle + \alpha \sum_{A \in \mathcal{A}} w_A(q)\, \langle \tilde{\boldsymbol{\phi}}_A(q), \tilde{\boldsymbol{\phi}}_A(m) \rangle$$
 
 Trained on **AxisCF**, a synthetic corpus of 4,196 axis-counterfactual triplets, Axis-LoRA improves
 4-benchmark mean R@10 on LongMemEval, ATM-Bench (Normal/Hard), and LoCoMo by +1.28 to +1.56 pp

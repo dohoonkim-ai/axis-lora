@@ -15,6 +15,16 @@
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
 
+  <script>
+    window.MathJax = {
+      loader: { load: ['[tex]/boldsymbol'] },
+      tex: { packages: { '[+]': ['boldsymbol'] } },
+      svg: { fontCache: 'global' },
+      options: { enableMenu: false }
+    };
+  </script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+
   <style>
     body { font-family: 'Noto Sans', sans-serif; background: #fff; }
     .publication-title, .publication-authors { font-family: 'Google Sans', sans-serif; }
@@ -28,8 +38,8 @@
     .section-divider { border-top: 1px solid #eee; margin: 0 10%; }
     .key-badge { background: #eef2f8; color: #2c4a7a; border-radius: 999px; padding: 0.35rem 1rem; font-weight: 600; display: inline-block; margin: 0.2rem; }
     .stage-card { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 1.5rem; height: 100%; text-align: left; }
-    .formula { font-family: 'Castoro', serif; font-size: 1.2rem; background: #f4f6fa; border-radius: 8px; padding: 0.75rem 1.25rem; display: inline-block; margin: 0.5rem 0 1rem; max-width: 100%; overflow-x: auto; }
-    .formula i { font-style: italic; }
+    .formula { font-size: 1.15rem; color: #363636; background: #f4f6fa; border-radius: 8px; padding: 0.1rem 1.5rem; display: inline-block; margin: 1rem 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+    .formula mjx-container[display="true"] { margin: 0.7em 0 !important; }
     .analysis-block { margin-top: 3rem; }
     .fig-narrow { max-width: 55%; }
     .fig-wide { max-width: 92%; }
@@ -215,15 +225,17 @@
         </div>
 
         <div class="analysis-block">
-          <h3 class="title is-5">Each axis uses its own attention heads</h3>
+          <h3 class="title is-5">Axis response concentrates in the late layers</h3>
           <div class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.25rem;">
             <p>
-              Measuring how much each attention head's output changes under a one-token axis edit shows a different
-              head pattern for each axis, concentrated in the later layers. This points to adapting the model
-              internally, one branch per axis, rather than post-processing its output.
+              We measure how much each attention head's pooled output changes when a single token of one axis is
+              edited. On all three models the response concentrates in the later layers. How widely it spreads across
+              heads depends on the axis. TEMPORAL is spread across the most heads, EVENT comes next, and SPATIAL and
+              ENTITY are concentrated in the fewest. This points to adapting the late layers of the model internally
+              rather than post-processing its output.
             </p>
           </div>
-          <img class="fig-wide" src="static/images/head_spectrum.png" alt="Heatmaps of per-layer, per-head response to axis edits for three models and four axes. Bright cells cluster in later layers, in different heads for each axis.">
+          <img class="fig-wide" src="static/images/head_spectrum.png" alt="Heatmaps of per-layer, per-head response to axis edits for three models and four axes. Bright cells cluster in later layers. TEMPORAL and EVENT spread over many heads, SPATIAL and ENTITY over fewer.">
           <p class="caption">
             Per-(layer, head) response to single-token axis edits. Rows within a panel are layers (input at top),
             columns are heads.
@@ -246,13 +258,15 @@
           The embedding model stays frozen. Axis-LoRA adds a gated per-axis term to its similarity score:
         </p>
         <div class="formula">
-          score(<i>q</i>, <i>m</i>) = &lang;<i>z</i><sub>b</sub>(<i>q</i>), <i>z</i><sub>b</sub>(<i>m</i>)&rang;
-          + <i>&alpha;</i> &sum;<sub><i>A</i></sub> <i>w</i><sub><i>A</i></sub>(<i>q</i>)
-          &lang;<i>&phi;</i><sub><i>A</i></sub>(<i>q</i>), <i>&phi;</i><sub><i>A</i></sub>(<i>m</i>)&rang;
+          \[
+            \mathrm{score}(q, m) = \langle \tilde{\mathbf{z}}_b(q),\, \tilde{\mathbf{z}}_b(m) \rangle
+            + \alpha \sum_{A \in \mathcal{A}} w_A(q)\, \langle \tilde{\boldsymbol{\phi}}_A(q),\, \tilde{\boldsymbol{\phi}}_A(m) \rangle
+          \]
         </div>
         <p class="caption" style="margin-top: 0;">
-          <i>z</i><sub>b</sub> is the frozen embedding, <i>&phi;</i><sub><i>A</i></sub> the embedding through the LoRA
-          branch of axis <i>A</i>, <i>w</i><sub><i>A</i></sub>(<i>q</i>) the gate weight, and <i>&alpha;</i> = 0.25.
+          \(\mathbf{z}_b\) is the frozen embedding model, \(\boldsymbol{\phi}_A\) the same model with the LoRA branch of
+          axis \(A\), \(\tilde{\cdot}\) denotes \(\ell_2\) normalization, \(w_A(q)\) is the per-query gate weight, and
+          \(\alpha = 0.25\).
         </p>
 
         <div class="columns is-centered" style="margin-top: 2rem;">
