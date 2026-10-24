@@ -1,437 +1,380 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Axis-LoRA</title>
-<meta name="description" content="Axis-LoRA: Probing and Adapting Embedding Models for Personal-Memory Retrieval (EMNLP 2026).">
-<meta property="og:title" content="Axis-LoRA: Probing and Adapting Embedding Models for Personal-Memory Retrieval">
-<meta property="og:description" content="Frozen embedding models barely register when or where a memory happened. Axis-LoRA adds four axis-specific LoRA branches and a per-query gate inside the model. EMNLP 2026.">
-<meta property="og:image" content="https://dohoonkim-ai.github.io/axis-lora/static/images/teaser.png">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Spectral:ital,wght@0,500;0,600;1,500&display=swap">
-<style>
-/* Layout: one reading column (65ch prose) with figures and the results table allowed to run wider. */
-:root {
-  --bg: #f4f5f8;
-  --surface: #ffffff;
-  --ink: #1b2130;
-  --muted: #586174;
-  --rule: #d9dde6;
-  --accent: #2c3d70;
-  --plate: #ffffff;
-  --t: #b9761f;
-  --s: #44709f;
-  --e: #548647;
-  --ev: #7b69ad;
-  --pos: #24704f;
-  --neg: #a8402f;
-  --font-display: "Spectral", Georgia, "Times New Roman", serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --wide: 1060px;
-  --prose: 40rem;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #10131a; --surface: #181c25; --ink: #e4e7ee; --muted: #9ca4b5; --rule: #2a303e;
-    --accent: #a3b4e8; --plate: #ffffff;
-    --t: #e0a14d; --s: #80a8d6; --e: #8fc07d; --ev: #b2a3de; --pos: #6fc79c; --neg: #ea8a7a;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #10131a; --surface: #181c25; --ink: #e4e7ee; --muted: #9ca4b5; --rule: #2a303e;
-  --accent: #a3b4e8; --plate: #ffffff;
-  --t: #e0a14d; --s: #80a8d6; --e: #8fc07d; --ev: #b2a3de; --pos: #6fc79c; --neg: #ea8a7a;
-  color-scheme: dark;
-}
+  <meta charset="utf-8">
+  <meta name="description" content="Axis-LoRA: Probing and Adapting Embedding Models for Personal-Memory Retrieval (EMNLP 2026 Main)">
+  <meta name="keywords" content="Axis-LoRA, personal memory retrieval, dense retrieval, embedding model, LoRA, counterfactual, LongMemEval, ATM-Bench, LoCoMo">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Axis-LoRA: Probing and Adapting Embedding Models for Personal-Memory Retrieval</title>
 
-* { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 1.0625rem;
-  line-height: 1.65;
-}
-img { max-width: 100%; height: auto; display: block; }
-a { color: var(--accent); text-underline-offset: 0.18em; }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+  <meta property="og:title" content="Axis-LoRA: Probing and Adapting Embedding Models for Personal-Memory Retrieval">
+  <meta property="og:description" content="Frozen embedding models barely register when, where, with whom, or what happened in a memory. Axis-LoRA adds four axis-specific LoRA branches with a per-query gate. EMNLP 2026 Main.">
+  <meta property="og:image" content="https://dohoonkim-ai.github.io/axis-lora/static/images/teaser.png">
+  <meta name="twitter:card" content="summary_large_image">
 
-.page { max-width: var(--wide); margin: 0 auto; padding-inline: 20px; padding-block: 56px 72px; }
-.prose { max-width: var(--prose); }
-section { margin-top: 72px; }
-h2 {
-  font-family: var(--font-display); font-weight: 600; font-size: 1.75rem; line-height: 1.2;
-  margin: 0 0 18px; text-wrap: balance;
-}
-h3 { font-family: var(--font-body); font-weight: 600; font-size: 1.0625rem; margin: 0 0 6px; }
-p { margin: 0 0 14px; }
-.label {
-  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--muted); margin: 0 0 10px;
-}
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
 
-/* ---- Header ---- */
-.axis-strip { display: flex; gap: 6px; margin-bottom: 22px; }
-.axis-strip span { height: 6px; width: 44px; border-radius: 3px; }
-.venue { font-family: var(--font-mono); font-size: 0.8125rem; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 12px; }
-h1 {
-  font-family: var(--font-display); font-weight: 600; font-size: clamp(2rem, 4.6vw, 3.1rem);
-  line-height: 1.12; margin: 0 0 22px; max-width: 22ch; text-wrap: balance; letter-spacing: -0.01em;
-}
-h1 .sub { display: block; font-weight: 500; font-style: italic; font-size: 0.56em; line-height: 1.3; margin-top: 10px; color: var(--muted); letter-spacing: 0; }
-.authors { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 1.0625rem; font-weight: 500; margin: 0 0 8px; }
-.authors sup, .affil sup { font-size: 0.68em; font-weight: 400; margin-left: 1px; }
-.affil { font-size: 0.875rem; color: var(--muted); line-height: 1.55; margin: 0 0 26px; }
-.links { display: flex; flex-wrap: wrap; gap: 10px; }
-.btn {
-  display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 6px;
-  font-size: 0.9375rem; font-weight: 500; text-decoration: none;
-  border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
-}
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-.btn[aria-disabled="true"] { color: var(--muted); cursor: default; }
-.btn svg { width: 16px; height: 16px; flex: none; }
+  <style>
+    body { font-family: 'Noto Sans', sans-serif; background: #fff; }
+    .publication-title, .publication-authors { font-family: 'Google Sans', sans-serif; }
+    .publication-authors a { color: #3273dc !important; }
+    .author-block { display: inline-block; }
+    .publication-venue { color: #b31b1b; font-weight: 700; font-size: 1.2rem; }
+    .link-block { margin: 3px; }
+    .button .icon svg { width: 1.05em; height: 1.05em; }
+    .teaser .hero-body { padding-top: 0; padding-bottom: 3rem; }
+    .caption { font-size: 0.92rem; color: #555; max-width: 820px; margin: 0.75rem auto 0; }
+    .section-divider { border-top: 1px solid #eee; margin: 0 10%; }
+    .key-badge { background: #eef2f8; color: #2c4a7a; border-radius: 999px; padding: 0.35rem 1rem; font-weight: 600; display: inline-block; margin: 0.2rem; }
+    .stage-card { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 1.5rem; height: 100%; text-align: left; }
+    .formula { font-family: 'Castoro', serif; font-size: 1.2rem; background: #f4f6fa; border-radius: 8px; padding: 0.75rem 1.25rem; display: inline-block; margin: 0.5rem 0 1rem; max-width: 100%; overflow-x: auto; }
+    .formula i { font-style: italic; }
+    .analysis-block { margin-top: 3rem; }
+    .fig-narrow { max-width: 55%; }
+    .fig-wide { max-width: 92%; }
 
-/* ---- Figures ---- */
-figure { margin: 0; }
-.plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 8px; padding: 14px; }
-figcaption { font-size: 0.875rem; color: var(--muted); line-height: 1.55; margin-top: 12px; max-width: 46rem; }
-.teaser { margin-top: 48px; }
+    /* results */
+    .results-table td, .results-table th { vertical-align: middle; text-align: center; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .results-table th.left, .results-table td.left { text-align: left; }
+    .results-table tbody tr.group-start td { border-top: 2px solid #dbdbdb; }
+    .highlight-row td { background-color: #fdeaea; font-weight: 700; }
+    .delta { display: block; font-size: 0.74rem; font-weight: 600; }
+    .delta.up { color: #24704f; }
+    .delta.down { color: #a8402f; }
 
-/* ---- Counterfactual demo ---- */
-.cf {
-  background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
-  padding: 22px 22px 18px; margin-top: 22px; max-width: 46rem;
-}
-.cf-memory { font-family: var(--font-display); font-size: 1.3rem; line-height: 1.55; margin: 0 0 18px; min-height: 2lh; }
-.slot { border-bottom: 2px solid var(--c); padding: 0 1px; transition: background-color 0.2s ease; }
-.slot.swapped { background: color-mix(in srgb, var(--c) 22%, transparent); border-radius: 3px 3px 0 0; }
-.slot[data-axis="TEMPORAL"] { --c: var(--t); }
-.slot[data-axis="SPATIAL"] { --c: var(--s); }
-.slot[data-axis="ENTITY"] { --c: var(--e); }
-.slot[data-axis="EVENT"] { --c: var(--ev); }
-.cf-controls { display: flex; flex-wrap: wrap; gap: 8px; }
-.cf-controls button {
-  font: 500 0.8125rem/1 var(--font-mono); letter-spacing: 0.04em; padding: 8px 12px; border-radius: 5px;
-  border: 1px solid var(--rule); background: transparent; color: var(--ink); cursor: pointer;
-  display: inline-flex; align-items: center; gap: 7px;
-}
-.cf-controls button .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--muted)); }
-.cf-controls button[aria-pressed="true"] { border-color: var(--c, var(--ink)); background: color-mix(in srgb, var(--c, var(--ink)) 14%, transparent); }
-.cf-controls button[data-axis="TEMPORAL"] { --c: var(--t); }
-.cf-controls button[data-axis="SPATIAL"] { --c: var(--s); }
-.cf-controls button[data-axis="ENTITY"] { --c: var(--e); }
-.cf-controls button[data-axis="EVENT"] { --c: var(--ev); }
-.cf-note { font-size: 0.875rem; color: var(--muted); margin: 14px 0 0; min-height: 1.5em; }
+    /* AxisCF example */
+    .cf-table td { font-size: 0.9rem; text-align: left; vertical-align: middle; }
+    .cf-table td.axis { font-weight: 700; font-size: 0.78rem; letter-spacing: 0.04em; white-space: nowrap; }
+    .cf-table mark { background: none; padding: 0 0.1em; font-weight: 700; color: inherit; border-bottom: 2px solid currentColor; }
+    .ax-t { color: #b9761f; } .ax-s { color: #44709f; } .ax-e { color: #548647; } .ax-ev { color: #7b69ad; }
+    .cf-table mark.ax-t { color: #b9761f; } .cf-table mark.ax-s { color: #44709f; }
+    .cf-table mark.ax-e { color: #548647; } .cf-table mark.ax-ev { color: #7b69ad; }
 
-/* ---- Findings ---- */
-.finding { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 36px; align-items: start; margin-top: 36px; }
-.finding > * { min-width: 0; }
-.finding.flip { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
-.finding.flip figure { order: -1; }
+    pre.bibtex { text-align: left; font-size: 0.85rem; border-radius: 8px; background: #f5f5f5; padding: 1.25rem; overflow-x: auto; }
+    .footer { padding: 2rem 1.5rem; }
 
-/* ---- Method ---- */
-.formula {
-  font-family: var(--font-display); font-size: 1.25rem; line-height: 1.6; background: var(--surface);
-  border: 1px solid var(--rule); border-radius: 8px; padding: 16px 20px; margin: 18px 0 26px;
-  overflow-x: auto; white-space: nowrap; max-width: 46rem;
-}
-.formula var { font-style: italic; }
-.formula .sum { font-size: 1.3em; vertical-align: -0.08em; }
-.design { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 8px; }
-.design > div { min-width: 0; border-top: 2px solid var(--rule); padding-top: 14px; }
-.design p { font-size: 0.9688rem; color: var(--ink); }
-.chips { display: flex; gap: 4px; margin-bottom: 10px; }
-.chips span { font: 500 0.6875rem/1 var(--font-mono); padding: 4px 6px; border-radius: 4px; color: var(--bg); }
-
-/* ---- Results ---- */
-.table-wrap { overflow-x: auto; margin-top: 22px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; }
-table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
-th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
-th:first-child, td:first-child { text-align: left; }
-thead th { font-weight: 600; font-size: 0.8125rem; color: var(--muted); border-bottom: 1px solid var(--rule); }
-thead tr:first-child th { color: var(--ink); font-size: 0.875rem; }
-thead tr:first-child th + th { border-left: 1px solid var(--rule); }
-td.grp { border-left: 1px solid var(--rule); }
-tbody tr + tr td { border-top: 1px solid color-mix(in srgb, var(--rule) 60%, transparent); }
-tr.avg td { border-top: 1px solid var(--rule); font-weight: 600; }
-.d { font-family: var(--font-mono); font-size: 0.875rem; }
-.d.up { color: var(--pos); }
-.d.down { color: var(--neg); }
-.note { font-size: 0.875rem; color: var(--muted); margin-top: 12px; max-width: 46rem; }
-.ci { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 22px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
-.ci > div { padding: 14px 16px; min-width: 0; }
-.ci > div + div { border-left: 1px solid var(--rule); }
-.ci .num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.ci .range { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted); margin-top: 4px; }
-.ci .who { font-size: 0.8125rem; color: var(--muted); margin-bottom: 6px; }
-
-/* ---- BibTeX ---- */
-.bib { position: relative; margin-top: 18px; }
-.bib pre {
-  margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
-  padding: 18px 20px; overflow-x: auto; font: 0.84rem/1.6 var(--font-mono); color: var(--ink);
-}
-.bib button {
-  position: absolute; top: 10px; right: 10px; font: 500 0.8125rem/1 var(--font-body);
-  padding: 7px 11px; border-radius: 5px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer;
-}
-footer { margin-top: 72px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 0.8125rem; color: var(--muted); }
-
-@media (max-width: 820px) {
-  .finding, .finding.flip { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-  .finding.flip figure { order: 0; }
-  .design { grid-template-columns: minmax(0, 1fr); gap: 18px; }
-  .ci { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ci > div:nth-child(3) { border-left: 0; }
-  .ci > div:nth-child(n+3) { border-top: 1px solid var(--rule); }
-  .page { padding-block: 36px 56px; }
-  section { margin-top: 56px; }
-}
-@media (max-width: 440px) {
-  .cf-memory { font-size: 1.15rem; }
-  .formula { font-size: 1.05rem; }
-}
-@media (prefers-reduced-motion: reduce) { .slot { transition: none; } }
-</style>
+    @media screen and (max-width: 768px) {
+      .fig-narrow, .fig-wide { max-width: 100%; }
+      .publication-title br { display: none; }
+    }
+  </style>
 </head>
 <body>
-<main class="page">
 
-  <header>
-    <div class="axis-strip" aria-hidden="true">
-      <span style="background: var(--t)"></span><span style="background: var(--s)"></span><span style="background: var(--e)"></span><span style="background: var(--ev)"></span>
-    </div>
-    <p class="venue">EMNLP 2026</p>
-    <h1>Axis-LoRA<span class="sub">Probing and Adapting Embedding Models for Personal-Memory Retrieval</span></h1>
-    <p class="authors">
-      <span>Dohoon Kim<sup>1</sup></span>
-      <span>Junho Park<sup>1</sup></span>
-      <span>Hyunwoong Bae<sup>2</sup></span>
-      <span>Seyoon Kim<sup>2,3</sup></span>
-      <span>Taesup Moon<sup>1,2,4*</sup></span>
-    </p>
-    <p class="affil">
-      <sup>1</sup>Department of Electrical and Computer Engineering, Seoul National University ·
-      <sup>2</sup>Interdisciplinary Program in Artificial Intelligence, Seoul National University ·
-      <sup>3</sup>Mobile eXperience Business, Samsung Electronics ·
-      <sup>4</sup>ASRI/INMC/AIIS, Seoul National University ·
-      *Corresponding author
-    </p>
-    <nav class="links" aria-label="Paper resources">
-      <span class="btn" aria-disabled="true">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg>
-        Paper (coming soon)
-      </span>
-      <a class="btn primary" href="https://github.com/dohoonkim-ai/axis-lora">
-        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-        Code
-      </a>
-      <a class="btn" href="https://github.com/dohoonkim-ai/axis-lora/tree/main/data/axiscf">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><ellipse cx="8" cy="3.5" rx="5.5" ry="2"/><path d="M2.5 3.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9"/><path d="M2.5 8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"/></svg>
-        AxisCF data
-      </a>
-      <a class="btn" href="#citation">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 3.5h4v4H4.5L3 11z"/><path d="M9 3.5h4v4h-2.5L9 11z"/></svg>
-        BibTeX
-      </a>
-    </nav>
-  </header>
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">Axis-LoRA: Probing and Adapting Embedding Models<br>for Personal-Memory Retrieval</h1>
+          <div class="publication-venue">EMNLP 2026 Main</div>
+          <div class="is-size-5 publication-authors" style="margin-top: 1rem;">
+            <span class="author-block"><a href="https://mindlab-snu.notion.site/Dohoon-Kim-1b83765631c280339161f0a2785a338e">Dohoon Kim</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://github.com/kingthebryan">Junho Park</a><sup>1</sup>,</span>
+            <span class="author-block">Hyunwoong Bae<sup>2</sup>,</span>
+            <span class="author-block">Seyoon Kim<sup>2,3</sup>,</span>
+            <span class="author-block"><a href="https://mindlab-snu.notion.site/taesup-moon">Taesup Moon</a><sup>1,2,4&dagger;</sup></span>
+          </div>
+          <div class="is-size-6 publication-authors">
+            <span class="author-block"><sup>1</sup>Department of ECE, Seoul National University</span>&nbsp;
+            <span class="author-block"><sup>2</sup>Interdisciplinary Program in AI, Seoul National University</span><br>
+            <span class="author-block"><sup>3</sup>Mobile eXperience Business, Samsung Electronics</span>&nbsp;
+            <span class="author-block"><sup>4</sup>ASRI/INMC/AIIS, Seoul National University</span>
+          </div>
+          <div class="is-size-7" style="color:#777; margin-top:0.25rem;">
+            <sup>&dagger;</sup>Corresponding author
+          </div>
 
-  <figure class="teaser">
-    <div class="plate">
-      <img src="static/images/teaser.png" width="2400" height="975" alt="Left: a frozen retriever ranks four dentist appointments at nearly equal distance, so the query's time cue does not lift the correct May visit. Right: Axis-LoRA adds four axis LoRA branches to the last 20% of layers and a gate that weights them per query.">
-    </div>
-    <figcaption><strong>(a)</strong> A frozen retriever places same-content memories at nearly equal distance, so the time cue in the query does not separate the right memory from its neighbors. <strong>(b)</strong> Axis-LoRA adds four axis-conditional LoRA branches inside the embedding model and a per-query sparsemax gate that decides how much each axis contributes.</figcaption>
-  </figure>
-
-  <section id="abstract">
-    <p class="label">Abstract</p>
-    <div class="prose">
-      <p>As LLMs are increasingly asked questions about a user's personal experiences, retrieval must distinguish memories by time, place, person, and event. Current personal-memory pipelines rely on frozen dense embedding models to embed memories for retrieval, but we find that these models do not capture the four axes well. Swapping a memory's date or place barely shifts its embedding, and a trained projection on top of the frozen embedding does not recover the missing signal. The problem lives inside the model, where each axis is encoded by a distinct attention-head pattern. Guided by these findings, we propose Axis-LoRA, a per-axis adapter that places four LoRA branches inside the embedding model and combines them via a per-query gate. Across three standard embedding models evaluated on LongMemEval, ATM-Bench, and LoCoMo, Axis-LoRA improves 4-benchmark mean R@10 by +1.28 to +1.56 pp while training only a small fraction of the base parameters on a small axis-counterfactual training set.</p>
-    </div>
-  </section>
-
-  <section id="axes">
-    <p class="label">Four axes of a memory</p>
-    <h2>Change one axis, keep everything else</h2>
-    <div class="prose">
-      <p>We describe a personal memory by four axes: <strong style="color: var(--t)">TEMPORAL</strong> (dates, times), <strong style="color: var(--s)">SPATIAL</strong> (places), <strong style="color: var(--e)">ENTITY</strong> (people, objects), and <strong style="color: var(--ev)">EVENT</strong> (actions, event types). An axis counterfactual swaps the value of one axis and leaves every other word in place, which isolates how much the embedding responds to that axis alone.</p>
-    </div>
-    <div class="cf" id="cf-demo">
-      <p class="cf-memory" aria-live="polite">I met <span class="slot" data-axis="ENTITY">Marco</span> at the <span class="slot" data-axis="SPATIAL">Boston</span> conference on <span class="slot" data-axis="TEMPORAL">2024-06-15</span> to discuss the <span class="slot" data-axis="EVENT">rehearsal dinner</span>.</p>
-      <div class="cf-controls" role="group" aria-label="Show a counterfactual">
-        <button type="button" id="cf-orig" aria-pressed="true">Original</button>
-        <button type="button" id="cf-t" data-axis="TEMPORAL" aria-pressed="false"><span class="dot"></span>CF Temporal</button>
-        <button type="button" id="cf-s" data-axis="SPATIAL" aria-pressed="false"><span class="dot"></span>CF Spatial</button>
-        <button type="button" id="cf-e" data-axis="ENTITY" aria-pressed="false"><span class="dot"></span>CF Entity</button>
-        <button type="button" id="cf-ev" data-axis="EVENT" aria-pressed="false"><span class="dot"></span>CF Event</button>
+          <div class="column has-text-centered" style="margin-top: 1rem;">
+            <div class="publication-links">
+              <span class="link-block">
+                <span class="button is-dark is-rounded" disabled title="Available soon">
+                  <span class="icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg></span>
+                  <span>Paper (soon)</span>
+                </span>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/dohoonkim-ai/axis-lora" class="button is-dark is-rounded">
+                  <span class="icon"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></span>
+                  <span>Code</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/dohoonkim-ai/axis-lora/tree/main/data/axiscf" class="button is-dark is-rounded">
+                  <span class="icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><ellipse cx="8" cy="3.5" rx="5.5" ry="2"/><path d="M2.5 3.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9"/><path d="M2.5 8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"/></svg></span>
+                  <span>AxisCF Data</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-      <p class="cf-note" id="cf-note">The running example from the paper. Pick an axis to see its counterfactual.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="findings">
-    <p class="label">What we find</p>
-    <h2>Frozen embedding models barely register the axes</h2>
-
-    <div class="finding">
-      <div class="prose">
-        <h3>The embedding hardly moves</h3>
-        <p>Across MiniLM-L6-v2, bge-base-en-v1.5, and Qwen3-Embedding-0.6B, swapping one axis moves a memory's embedding far less than the typical distance between two memories. TEMPORAL is the weakest axis: a date swap moves the embedding about as much as replacing one unrelated word. SPATIAL, ENTITY, and EVENT clear that floor but stay small.</p>
-        <p>A per-axis projection trained on top of the frozen output recovers part of the TEMPORAL signal, but retrieval by date stays far from useful. An output-side head does not close the gap.</p>
-      </div>
-      <figure>
-        <div class="plate"><img src="static/images/axis_blindness.png" width="1264" height="1395" loading="lazy" alt="Violin plots of cosine distance between a memory and its axis counterfactual for three embedding models. TEMPORAL sits at the one-word edit floor on every model; the other axes are higher but small."></div>
-        <figcaption>Cosine distance between a memory and its axis counterfactual. The dashed line is the distance caused by swapping one non-axis word.</figcaption>
-      </figure>
-    </div>
-
-    <div class="finding flip">
-      <div class="prose">
-        <h3>The signal lives inside the model</h3>
-        <p>Measuring how much each attention head's output changes under a one-token axis edit shows a different head pattern for each axis, concentrated in the later layers. This points to adapting the model internally, one branch per axis, rather than post-processing its output.</p>
-      </div>
-      <figure>
-        <div class="plate"><img src="static/images/head_spectrum.png" width="2000" height="1288" loading="lazy" alt="Heatmaps of per-layer, per-head response to axis edits for three models and four axes. Bright cells cluster in later layers, in different heads for each axis."></div>
-        <figcaption>Per-(layer, head) response to single-token axis edits. Rows within a panel are layers (input at top), columns are heads.</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <section id="method">
-    <p class="label">Method</p>
-    <h2>Axis-LoRA</h2>
-    <div class="prose">
-      <p>Axis-LoRA keeps the embedding model frozen and adds a gated per-axis term to its similarity score.</p>
-    </div>
-    <div class="formula" role="math" aria-label="score of q and m equals the base similarity plus alpha times the sum over axes of the gate weight times the axis similarity">
-      score(<var>q</var>, <var>m</var>) = ⟨<var>z</var><sub>b</sub>(<var>q</var>), <var>z</var><sub>b</sub>(<var>m</var>)⟩ + <var>α</var> <span class="sum">∑</span><sub><var>A</var></sub> <var>w</var><sub><var>A</var></sub>(<var>q</var>) ⟨<var>φ</var><sub><var>A</var></sub>(<var>q</var>), <var>φ</var><sub><var>A</var></sub>(<var>m</var>)⟩
-    </div>
-    <div class="design">
+<!-- ============ TL;DR + TEASER ============ -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body has-text-centered">
+      <p style="max-width: 820px; margin: 0 auto 1.5rem; font-size: 1.1rem;">
+        <b>TL;DR.</b> Frozen embedding models barely notice when a memory's <b>time</b>, <b>place</b>, <b>person</b>,
+        or <b>event</b> changes. Axis-LoRA adds four axis-specific LoRA branches inside the model, weighted per query,
+        and raises 4-benchmark mean R@10 on all three embedding models we test.
+      </p>
       <div>
-        <div class="chips" aria-hidden="true"><span style="background: var(--t)">T</span><span style="background: var(--s)">S</span><span style="background: var(--e)">E</span><span style="background: var(--ev)">Ev</span></div>
-        <h3>Four axis branches</h3>
-        <p>One LoRA adapter per axis (rank 16) on the query and value projections of the last 20% of attention layers. The branches share no parameters, so each axis learns its own direction.</p>
+        <span class="key-badge">&#10003; One LoRA branch per axis</span>
+        <span class="key-badge">&#10003; &le; 0.6% of base parameters</span>
+        <span class="key-badge">&#10003; 4,196 synthetic training triplets</span>
       </div>
-      <div>
-        <h3>Per-query gate</h3>
-        <p>An MLP on the frozen query embedding, followed by sparsemax, gives exact zeros to axes the query does not need. The gate temperature anneals from 2.0 to 0.5 during training.</p>
-      </div>
-      <div>
-        <h3>Training</h3>
-        <p>InfoNCE on AxisCF, where each memory's own counterfactuals are hard negatives, plus a distillation anchor that keeps every branch close to the base model on MS MARCO passages.</p>
-      </div>
+      <img src="static/images/teaser.png" alt="Left: a frozen retriever ranks four dentist appointments at nearly equal distance, so the query's time cue does not lift the correct May visit. Right: Axis-LoRA adds four axis LoRA branches to the last 20% of layers and a gate that weights them per query." style="margin-top: 2rem;">
+      <p class="caption">
+        <b>(a)</b> A frozen retriever places same-content memories at nearly equal distance, so the time cue in the
+        query does not separate the right memory from its neighbors. <b>(b)</b> Axis-LoRA adds four axis-conditional
+        LoRA branches inside the embedding model and a per-query sparsemax gate that decides how much each axis contributes.
+      </p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="results">
-    <p class="label">Results</p>
-    <h2>Gains on all three encoders</h2>
-    <div class="prose">
-      <p>R@10 of the frozen base model and Axis-LoRA (mean of 4 seeds) on LongMemEval, ATM-Bench Normal and Hard, and LoCoMo. The adapter trains at most 0.6% of the base parameters on 4,196 AxisCF triplets.</p>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th rowspan="2" scope="col">Benchmark</th><th colspan="3" scope="colgroup">MiniLM-L6-v2</th><th colspan="3" scope="colgroup">bge-base-en-v1.5</th><th colspan="3" scope="colgroup">Qwen3-Embedding-0.6B</th></tr>
-          <tr><th scope="col">Base</th><th scope="col">Axis-LoRA</th><th scope="col">Δ pp</th><th scope="col" class="grp">Base</th><th scope="col">Axis-LoRA</th><th scope="col">Δ pp</th><th scope="col" class="grp">Base</th><th scope="col">Axis-LoRA</th><th scope="col">Δ pp</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>LongMemEval</td><td>0.4741</td><td>0.4872</td><td class="d up">+1.31</td><td class="grp">0.6099</td><td>0.6397</td><td class="d up">+2.98</td><td class="grp">0.7174</td><td>0.7238</td><td class="d up">+0.64</td></tr>
-          <tr><td>ATM-Bench Normal</td><td>0.6465</td><td>0.6571</td><td class="d up">+1.06</td><td class="grp">0.7286</td><td>0.7368</td><td class="d up">+0.82</td><td class="grp">0.7544</td><td>0.7420</td><td class="d down">−1.24</td></tr>
-          <tr><td>ATM-Bench Hard</td><td>0.2806</td><td>0.3051</td><td class="d up">+2.45</td><td class="grp">0.2911</td><td>0.3148</td><td class="d up">+2.37</td><td class="grp">0.2994</td><td>0.3370</td><td class="d up">+3.75</td></tr>
-          <tr><td>LoCoMo</td><td>0.4422</td><td>0.4564</td><td class="d up">+1.42</td><td class="grp">0.6244</td><td>0.6178</td><td class="d down">−0.66</td><td class="grp">0.5856</td><td>0.6053</td><td class="d up">+1.97</td></tr>
-          <tr class="avg"><td>4-benchmark mean</td><td>0.4608</td><td>0.4765</td><td class="d up">+1.56</td><td class="grp">0.5635</td><td>0.5773</td><td class="d up">+1.38</td><td class="grp">0.5892</td><td>0.6020</td><td class="d up">+1.28</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="ci" aria-label="95% confidence intervals">
-      <div><div class="who">MiniLM-L6-v2, 4-bench mean</div><div class="num">+1.56</div><div class="range">95% CI [+0.54, +2.70]</div></div>
-      <div><div class="who">bge-base-en-v1.5, 4-bench mean</div><div class="num">+1.38</div><div class="range">95% CI [+0.25, +2.39]</div></div>
-      <div><div class="who">Qwen3-0.6B, 4-bench mean</div><div class="num">+1.28</div><div class="range">95% CI [+0.15, +2.52]</div></div>
-      <div><div class="who">ATM-Bench Hard, 3 encoders pooled</div><div class="num">+2.86</div><div class="range">95% CI [+0.55, +5.36]</div></div>
-    </div>
-    <p class="note">Query-level bootstrap, 20k resamples of per-query R@10 deltas averaged over seeds. ATM-Bench Hard has 31 queries with about 6 gold memories each, so its gain is tested pooled over the three encoders.</p>
-  </section>
+<div class="section-divider"></div>
 
-  <section id="citation">
-    <p class="label">Citation</p>
-    <h2>BibTeX</h2>
-    <div class="bib">
-      <pre id="bibtex">@inproceedings{kim2026axislora,
+<!-- ============ ABSTRACT ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            As LLMs are increasingly asked questions about a user's personal experiences, retrieval must distinguish
+            memories by time, place, person, and event. Current personal-memory pipelines rely on frozen dense embedding
+            models to embed memories for retrieval, but we find that these models do not capture the four axes well.
+            Swapping a memory's date or place barely shifts its embedding, and a trained projection on top of the frozen
+            embedding does not recover the missing signal. The problem lives inside the model, where each axis is encoded
+            by a distinct attention-head pattern. Guided by these findings, we propose <b>Axis-LoRA</b>, a per-axis
+            adapter that places four LoRA branches inside the embedding model and combines them via a per-query gate.
+            Across three standard embedding models evaluated on LongMemEval, ATM-Bench, and LoCoMo, Axis-LoRA improves
+            4-benchmark mean R@10 by +1.28 to +1.56&nbsp;pp while training only a small fraction of the base parameters
+            on a small axis-counterfactual training set.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ============ PROBING ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">Do Embedding Models Encode the Four Axes?</h2>
+        <div class="content has-text-justified" style="max-width: 820px; margin: 0 auto;">
+          <p>
+            We describe a personal memory by four axes: <b class="ax-t">TEMPORAL</b> (dates, times),
+            <b class="ax-s">SPATIAL</b> (places), <b class="ax-e">ENTITY</b> (people, objects), and
+            <b class="ax-ev">EVENT</b> (actions, event types). An <i>axis counterfactual</i> changes the value of one
+            axis and keeps the rest of the memory verbatim, which isolates how much a model responds to that axis alone.
+          </p>
+        </div>
+
+        <div class="table-container" style="margin-top: 1.5rem;">
+          <table class="table cf-table" style="margin: 0 auto;">
+            <tbody>
+              <tr><td class="axis">ORIGINAL</td><td>[2023-11-22 19:00] Mom: Thanksgiving dinner went well. Everyone loved the turkey, and we played board games until midnight.</td></tr>
+              <tr><td class="axis ax-t">TEMPORAL</td><td>[<mark class="ax-t">2023-12-01 10:00</mark>] Mom: Thanksgiving dinner went well. Everyone loved the turkey, and we played board games until midnight.</td></tr>
+              <tr><td class="axis ax-s">SPATIAL</td><td>[2023-11-22 19:00] Mom: Thanksgiving dinner went well <mark class="ax-s">at the office</mark>. Everyone loved the turkey, and we played board games until midnight.</td></tr>
+              <tr><td class="axis ax-e">ENTITY</td><td>[2023-11-22 19:00] <mark class="ax-e">Dad</mark>: Thanksgiving dinner went well. Everyone loved the turkey, and we played board games until midnight.</td></tr>
+              <tr><td class="axis ax-ev">EVENT</td><td>[2023-11-22 19:00] Mom: Thanksgiving <mark class="ax-ev">lunch</mark> went well. Everyone loved the turkey, and we played board games until midnight.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">A training triplet from AxisCF: one memory and one counterfactual per axis, with the changed span underlined.</p>
+
+        <div class="analysis-block">
+          <h3 class="title is-5">An axis edit barely moves the embedding</h3>
+          <div class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.25rem;">
+            <p>
+              Across MiniLM-L6-v2, bge-base-en-v1.5, and Qwen3-Embedding-0.6B, swapping one axis moves a memory's
+              embedding far less than the typical distance between two memories. TEMPORAL is the weakest axis. A date
+              swap moves the embedding about as much as replacing one unrelated word, and SPATIAL, ENTITY, and EVENT
+              clear that floor but stay small. A per-axis projection trained on the frozen output recovers part of the
+              TEMPORAL signal, but retrieval by date stays far from useful.
+            </p>
+          </div>
+          <img class="fig-narrow" src="static/images/axis_blindness.png" alt="Violin plots of cosine distance between a memory and its axis counterfactual for three embedding models. TEMPORAL sits at the one-word edit floor on every model; the other axes are higher but small.">
+          <p class="caption">
+            Cosine distance between a memory and its axis counterfactual. The dashed line is the distance caused by
+            swapping one non-axis word.
+          </p>
+        </div>
+
+        <div class="analysis-block">
+          <h3 class="title is-5">Each axis uses its own attention heads</h3>
+          <div class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.25rem;">
+            <p>
+              Measuring how much each attention head's output changes under a one-token axis edit shows a different
+              head pattern for each axis, concentrated in the later layers. This points to adapting the model
+              internally, one branch per axis, rather than post-processing its output.
+            </p>
+          </div>
+          <img class="fig-wide" src="static/images/head_spectrum.png" alt="Heatmaps of per-layer, per-head response to axis edits for three models and four axes. Bright cells cluster in later layers, in different heads for each axis.">
+          <p class="caption">
+            Per-(layer, head) response to single-token axis edits. Rows within a panel are layers (input at top),
+            columns are heads.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ============ METHOD ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">Axis-LoRA</h2>
+        <p style="max-width: 820px; margin: 0 auto;">
+          The embedding model stays frozen. Axis-LoRA adds a gated per-axis term to its similarity score:
+        </p>
+        <div class="formula">
+          score(<i>q</i>, <i>m</i>) = &lang;<i>z</i><sub>b</sub>(<i>q</i>), <i>z</i><sub>b</sub>(<i>m</i>)&rang;
+          + <i>&alpha;</i> &sum;<sub><i>A</i></sub> <i>w</i><sub><i>A</i></sub>(<i>q</i>)
+          &lang;<i>&phi;</i><sub><i>A</i></sub>(<i>q</i>), <i>&phi;</i><sub><i>A</i></sub>(<i>m</i>)&rang;
+        </div>
+        <p class="caption" style="margin-top: 0;">
+          <i>z</i><sub>b</sub> is the frozen embedding, <i>&phi;</i><sub><i>A</i></sub> the embedding through the LoRA
+          branch of axis <i>A</i>, <i>w</i><sub><i>A</i></sub>(<i>q</i>) the gate weight, and <i>&alpha;</i> = 0.25.
+        </p>
+
+        <div class="columns is-centered" style="margin-top: 2rem;">
+          <div class="column is-one-third">
+            <div class="stage-card">
+              <p class="is-size-5"><b>Four axis branches</b></p>
+              <p style="margin-top: 0.75rem;">
+                One LoRA adapter per axis (rank 16) on the query and value projections of the last 20% of attention
+                layers. The branches share no parameters, so each axis learns its own direction.
+              </p>
+            </div>
+          </div>
+          <div class="column is-one-third">
+            <div class="stage-card">
+              <p class="is-size-5"><b>Per-query gate</b></p>
+              <p style="margin-top: 0.75rem;">
+                An MLP on the frozen query embedding, followed by sparsemax, gives exact zeros to axes the query does
+                not need. The gate temperature anneals from 2.0 to 0.5 during training.
+              </p>
+            </div>
+          </div>
+          <div class="column is-one-third">
+            <div class="stage-card">
+              <p class="is-size-5"><b>Training</b></p>
+              <p style="margin-top: 0.75rem;">
+                InfoNCE on AxisCF, where each memory's own counterfactuals are hard negatives, plus a distillation
+                anchor that keeps every branch close to the base model on MS MARCO passages.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ============ RESULTS ============ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">Results</h2>
+        <p class="caption" style="margin-bottom: 1rem;">
+          R@10 of the frozen embedding model and Axis-LoRA (mean of 4 seeds). Small numbers are the change over the
+          frozen model in percentage points.
+        </p>
+        <div class="table-container">
+          <table class="table is-hoverable results-table" style="margin: 0 auto;">
+            <thead>
+              <tr>
+                <th class="left">Embedding model</th><th class="left">Method</th>
+                <th>LongMemEval</th><th>ATM-Bench<br>Normal</th><th>ATM-Bench<br>Hard</th><th>LoCoMo</th><th>4-bench<br>Mean</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="group-start"><td class="left" rowspan="2">MiniLM-L6-v2</td><td class="left">Frozen</td><td>0.4741</td><td>0.6465</td><td>0.2806</td><td>0.4422</td><td>0.4608</td></tr>
+              <tr class="highlight-row"><td class="left">Axis-LoRA</td><td>0.4872<span class="delta up">+1.31</span></td><td>0.6571<span class="delta up">+1.06</span></td><td>0.3051<span class="delta up">+2.45</span></td><td>0.4564<span class="delta up">+1.42</span></td><td>0.4765<span class="delta up">+1.56</span></td></tr>
+              <tr class="group-start"><td class="left" rowspan="2">bge-base-en-v1.5</td><td class="left">Frozen</td><td>0.6099</td><td>0.7286</td><td>0.2911</td><td>0.6244</td><td>0.5635</td></tr>
+              <tr class="highlight-row"><td class="left">Axis-LoRA</td><td>0.6397<span class="delta up">+2.98</span></td><td>0.7368<span class="delta up">+0.82</span></td><td>0.3148<span class="delta up">+2.37</span></td><td>0.6178<span class="delta down">&minus;0.66</span></td><td>0.5773<span class="delta up">+1.38</span></td></tr>
+              <tr class="group-start"><td class="left" rowspan="2">Qwen3-Embedding-0.6B</td><td class="left">Frozen</td><td>0.7174</td><td>0.7544</td><td>0.2994</td><td>0.5856</td><td>0.5892</td></tr>
+              <tr class="highlight-row"><td class="left">Axis-LoRA</td><td>0.7238<span class="delta up">+0.64</span></td><td>0.7420<span class="delta down">&minus;1.24</span></td><td>0.3370<span class="delta up">+3.75</span></td><td>0.6053<span class="delta up">+1.97</span></td><td>0.6020<span class="delta up">+1.28</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">
+          Axis-LoRA raises the 4-benchmark mean on all three embedding models while training at most 0.6% of the base
+          parameters on 4,196 AxisCF triplets. ATM-Bench Hard improves on all three models (+2.37 to +3.75 pp).
+        </p>
+
+        <h3 class="title is-5" style="margin-top: 3rem;">Confidence intervals</h3>
+        <div class="table-container">
+          <table class="table results-table" style="margin: 0 auto;">
+            <thead>
+              <tr><th class="left"></th><th>MiniLM-L6-v2</th><th>bge-base-en-v1.5</th><th>Qwen3-Embedding-0.6B</th><th>ATM-Bench Hard<br>(3 models pooled)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="left">Gain (pp)</td><td><b>+1.56</b></td><td><b>+1.38</b></td><td><b>+1.28</b></td><td><b>+2.86</b></td></tr>
+              <tr><td class="left">95% CI</td><td>[+0.54, +2.70]</td><td>[+0.25, +2.39]</td><td>[+0.15, +2.52]</td><td>[+0.55, +5.36]</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">
+          Gain in 4-benchmark mean R@10, with query-level bootstrap 95% CIs (20k resamples). ATM-Bench Hard has 31
+          queries, so its gain is tested pooled over the three embedding models.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ============ BIBTEX ============ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">BibTeX</h2>
+    <pre class="bibtex"><code>@inproceedings{kim2026axislora,
   title     = {Axis-{LoRA}: Probing and Adapting Embedding Models for Personal-Memory Retrieval},
   author    = {Kim, Dohoon and Park, Junho and Bae, Hyunwoong and Kim, Seyoon and Moon, Taesup},
   booktitle = {Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
   year      = {2026}
-}</pre>
-      <button type="button" id="copy-bib">Copy</button>
+}</code></pre>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8 has-text-centered">
+        <p style="font-size: 0.9rem; color: #666;">
+          We evaluate on <a href="https://github.com/xiaowu0162/LongMemEval">LongMemEval</a>,
+          <a href="https://huggingface.co/datasets/Jingbiao/ATM-Bench">ATM-Bench</a>, and
+          <a href="https://github.com/snap-research/locomo">LoCoMo</a>.<br>
+          Website template adapted from <a href="https://nerfies.github.io/">Nerfies</a>.
+        </p>
+      </div>
     </div>
-  </section>
+  </div>
+</footer>
 
-  <footer>Seoul National University · <a href="https://github.com/dohoonkim-ai/axis-lora">github.com/dohoonkim-ai/axis-lora</a></footer>
-</main>
-
-<script>
-(function () {
-  var SWAPS = {
-    TEMPORAL: ["2024-06-15", "2024-09-20"],
-    SPATIAL: ["Boston", "Seattle"],
-    ENTITY: ["Marco", "Sarah"],
-    EVENT: ["rehearsal dinner", "budget meeting"]
-  };
-  var NOTES = {
-    TEMPORAL: "CF Temporal: only the date changes, 2024-06-15 → 2024-09-20.",
-    SPATIAL: "CF Spatial: only the place changes, Boston → Seattle.",
-    ENTITY: "CF Entity: only the person changes, Marco → Sarah.",
-    EVENT: "CF Event: only the event changes, rehearsal dinner → budget meeting."
-  };
-  var slots = document.querySelectorAll("#cf-demo .slot");
-  var buttons = document.querySelectorAll("#cf-demo .cf-controls button");
-  var note = document.getElementById("cf-note");
-  var defaultNote = note.textContent;
-
-  function show(axis) {
-    slots.forEach(function (s) {
-      var a = s.getAttribute("data-axis");
-      var on = a === axis;
-      s.textContent = on ? SWAPS[a][1] : SWAPS[a][0];
-      s.classList.toggle("swapped", on);
-    });
-    buttons.forEach(function (b) {
-      b.setAttribute("aria-pressed", String((b.getAttribute("data-axis") || null) === axis));
-    });
-    note.textContent = axis ? NOTES[axis] : defaultNote;
-  }
-  buttons.forEach(function (b) {
-    b.addEventListener("click", function () { show(b.getAttribute("data-axis")); });
-  });
-
-  var copyBtn = document.getElementById("copy-bib");
-  var pre = document.getElementById("bibtex");
-  copyBtn.addEventListener("click", function () {
-    function selectText() {
-      var r = document.createRange(); r.selectNodeContents(pre);
-      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      copyBtn.textContent = "Selected";
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(pre.textContent).then(function () {
-        copyBtn.textContent = "Copied";
-        setTimeout(function () { copyBtn.textContent = "Copy"; }, 1600);
-      }, selectText);
-    } else { selectText(); }
-  });
-})();
-</script>
 </body>
 </html>
