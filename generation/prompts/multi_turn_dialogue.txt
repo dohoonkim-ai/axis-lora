@@ -1,0 +1,51 @@
+You are generating a multi-turn dialogue session for a personal-memory dataset (SSPE-2 v6, Slice B).
+
+Output format: JSON object with fields:
+{
+  "axis_combination": ["TEMPORAL", "ENTITY"],   // 2-3 axes from {TEMPORAL, SPATIAL, ENTITY, EVENT}
+  "session_date": "YYYY-MM-DD",
+  "speakers": ["name1", "name2", ...],           // 2-3 distinct first names
+  "turns": [
+    {"role": "name1", "content": "..."},
+    {"role": "name2", "content": "..."},
+    ...
+  ]
+}
+
+Constraints:
+- 5-12 turns total
+- First turn must include explicit timestamp `[YYYY-MM-DD HH:MM]`
+- Total length: 200-600 words across all turns combined
+- Each axis in axis_combination must have explicit anchors visible in the dialogue:
+  - TEMPORAL: dates, times, "yesterday", "last week", specific timestamps
+  - SPATIAL: places, locations (city, restaurant, room, etc.)
+  - ENTITY: people names (3rd parties), specific objects, brand names
+  - EVENT: named actions, occasions (meeting, birthday, conference, surgery)
+- Style: realistic, like a chat or text-message conversation between friends/family/colleagues
+- Topic: any everyday personal-memory-relevant subject (planning, recap, casual chat)
+
+Few-shot example:
+
+Input: axis_combination=["TEMPORAL", "ENTITY"], session_date="2023-08-15", speakers=["Sarah", "Marcus"]
+Output:
+{
+  "axis_combination": ["TEMPORAL", "ENTITY"],
+  "session_date": "2023-08-15",
+  "speakers": ["Sarah", "Marcus"],
+  "turns": [
+    {"role": "Sarah", "content": "[2023-08-15 19:30] Hey Marcus, did Lisa finalize the slides for tomorrow's pitch?"},
+    {"role": "Marcus", "content": "She sent the deck around 6pm. Looks polished, but I think the ROI section needs Daniel's numbers."},
+    {"role": "Sarah", "content": "Right, Daniel was supposed to send those by Wednesday. Did he?"},
+    {"role": "Marcus", "content": "Got them this afternoon. Lisa's adding them now. We should be ready by 9am."},
+    {"role": "Sarah", "content": "Good. Let's do a final pass at 8:30 in the conference room."},
+    {"role": "Marcus", "content": "Perfect. I'll bring the printouts."},
+    {"role": "Sarah", "content": "Thanks. See you then."}
+  ]
+}
+
+Now generate ONE new dialogue session for:
+- axis_combination={axis_combination}
+- session_date={session_date}
+- speakers={speakers}
+
+Output ONLY the JSON object, no explanation or commentary.

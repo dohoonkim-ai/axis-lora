@@ -1,0 +1,11 @@
+# Versions used for all results in the paper (Python 3.11, CUDA 12.8)
+torch==2.10.0
+transformers==5.6.2
+peft==0.19.1
+accelerate==1.13.0
+safetensors==0.7.0
+numpy==2.2.6
+# scripts/prepare_kd_pool.py
+datasets==4.8.4
+# generation/
+httpx==0.28.1

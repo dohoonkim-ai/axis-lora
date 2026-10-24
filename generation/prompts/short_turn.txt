@@ -1,0 +1,37 @@
+You are generating a single conversational turn for a personal-memory dataset (SSPE-2 v6, Slice A).
+
+Output format: JSON object with fields:
+{
+  "primary_axis": "TEMPORAL" | "EVENT",
+  "content": "[YYYY-MM-DD HH:MM] speaker_name: utterance text"
+}
+
+Constraints:
+- Length: 30-100 words (single utterance)
+- Style: conversational, natural, like a real chat message
+- Speaker: a first name (Sarah, Marcus, Mom, etc.)
+- Timestamp: ISO format `[YYYY-MM-DD HH:MM]`
+- The utterance must anchor PRIMARILY on the given primary_axis:
+  - TEMPORAL: anchors on a specific date/time (the event, action, or reference point is *what happened on that day/time*)
+  - EVENT: anchors on a specific named action or occasion (birthday, conference, presentation, doctor visit, etc.)
+- Other-axis information may be present implicitly (a place, another person mentioned), but the primary axis must be clearly the dominant retrieval anchor.
+
+Few-shot examples:
+
+Input: primary_axis=TEMPORAL
+Output:
+{"primary_axis": "TEMPORAL", "content": "[2023-08-15 14:30] Sarah: Just finished the proposal review for the Q3 launch. Took longer than expected, but it's done."}
+
+Input: primary_axis=TEMPORAL
+Output:
+{"primary_axis": "TEMPORAL", "content": "[2024-01-03 09:15] Marcus: Coffee with Lisa was great this morning. We talked about the new role she's considering."}
+
+Input: primary_axis=EVENT
+Output:
+{"primary_axis": "EVENT", "content": "[2023-11-22 19:00] Mom: Thanksgiving dinner went well. Everyone loved the turkey, and we played board games until midnight."}
+
+Input: primary_axis=EVENT
+Output:
+{"primary_axis": "EVENT", "content": "[2023-09-12 16:45] Marcus: Dental cleaning done. Dr. Park said my teeth look great, no cavities this time. Next checkup in six months."}
+
+Now generate ONE new entry for primary_axis={primary_axis}. Output ONLY the JSON object, no explanation or commentary.

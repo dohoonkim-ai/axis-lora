@@ -1,0 +1,27 @@
+You are generating a hard-composition personal-memory passage that requires MULTIPLE axes to retrieve correctly (SSPE-2 v6, Slice D).
+
+Output format: JSON object with fields:
+{
+  "axis_combination": ["TEMPORAL", "SPATIAL", "ENTITY", "EVENT"],   // 3-4 axes from {T, S, E, EV}
+  "query_axes": ["TEMPORAL", "SPATIAL", "ENTITY"],   // axes the query MUST anchor on for unique retrieval
+  "format": "dialogue" | "passage" | "email_thread",
+  "content": "the memory passage text"
+}
+
+Constraints:
+- 3-4 axes simultaneously must be required for unique retrieval (i.e., dropping any one axis would cause ambiguity with other distractor memories)
+- Length: 200-1500 words
+- The passage must contain situations where multiple similar memories exist that share most axes, and only the FULL combination distinguishes the gold one
+- Style: the memory itself is rich enough that a partial axis-anchor query would retrieve multiple candidates
+
+Few-shot example (TEMPORAL + SPATIAL + ENTITY required):
+
+Output:
+{
+  "axis_combination": ["TEMPORAL", "SPATIAL", "ENTITY", "EVENT"],
+  "query_axes": ["TEMPORAL", "SPATIAL", "ENTITY"],
+  "format": "passage",
+  "content": "[2023-12-08 14:30] Conference Room B, NEXEN HQ — Marcus, Julia, and Daniel met for the second quarterly review of the year. Marcus presented Q4 sales projections (Q3 had been the first review, in same room with the same team). Julia raised concerns about the Berlin office launch timeline that mirrored what she had said about the Singapore launch back in March 2023. Daniel pushed back, citing the operational lessons learned from the Tokyo launch in June. The meeting ran 90 minutes. Decision: Berlin launch delayed to Q1 2024. Marcus to draft revised plan by Dec 15. Julia to coordinate with regional teams. Daniel to handle cross-office communications.\n\n[Note: This is the second time Julia raised the same concern in 2023. The first time was during the March planning session — also in Conference Room B, also with Marcus and Daniel. To find this specific meeting, you need TEMPORAL (Dec 8) + SPATIAL (Conference Room B) + ENTITY (Julia/Marcus/Daniel) — dropping any one collapses to multiple candidate meetings.]"
+}
+
+Now generate ONE new hard-composition memory for axis_combination={axis_combination}, query_axes={query_axes}, format={format}. Output ONLY the JSON object, no explanation or commentary.

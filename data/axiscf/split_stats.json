@@ -1,0 +1,120 @@
+{
+  "seed": 42,
+  "val_frac": 0.1,
+  "total": 4664,
+  "train_size": 4196,
+  "val_size": 468,
+  "n_strata": 14,
+  "per_stratum": {
+    "hard_composition|ENTITY+EVENT+SPATIAL+TEMPORAL": {
+      "train": 1121,
+      "val": 125,
+      "total": 1246
+    },
+    "multi_field_passage|ENTITY+EVENT+SPATIAL+TEMPORAL": {
+      "train": 834,
+      "val": 93,
+      "total": 927
+    },
+    "multi_turn_dialogue|ENTITY+EVENT": {
+      "train": 94,
+      "val": 10,
+      "total": 104
+    },
+    "multi_turn_dialogue|ENTITY+EVENT+SPATIAL": {
+      "train": 143,
+      "val": 16,
+      "total": 159
+    },
+    "multi_turn_dialogue|ENTITY+EVENT+TEMPORAL": {
+      "train": 145,
+      "val": 16,
+      "total": 161
+    },
+    "multi_turn_dialogue|ENTITY+SPATIAL": {
+      "train": 104,
+      "val": 12,
+      "total": 116
+    },
+    "multi_turn_dialogue|ENTITY+SPATIAL+TEMPORAL": {
+      "train": 140,
+      "val": 16,
+      "total": 156
+    },
+    "multi_turn_dialogue|ENTITY+TEMPORAL": {
+      "train": 67,
+      "val": 8,
+      "total": 75
+    },
+    "multi_turn_dialogue|EVENT+SPATIAL": {
+      "train": 89,
+      "val": 10,
+      "total": 99
+    },
+    "multi_turn_dialogue|EVENT+SPATIAL+TEMPORAL": {
+      "train": 155,
+      "val": 17,
+      "total": 172
+    },
+    "multi_turn_dialogue|EVENT+TEMPORAL": {
+      "train": 103,
+      "val": 12,
+      "total": 115
+    },
+    "multi_turn_dialogue|SPATIAL+TEMPORAL": {
+      "train": 76,
+      "val": 8,
+      "total": 84
+    },
+    "short_turn|EVENT": {
+      "train": 450,
+      "val": 50,
+      "total": 500
+    },
+    "short_turn|TEMPORAL": {
+      "train": 675,
+      "val": 75,
+      "total": 750
+    }
+  },
+  "slice_distribution": {
+    "train": {
+      "short_turn": 1125,
+      "multi_turn_dialogue": 1116,
+      "multi_field_passage": 834,
+      "hard_composition": 1121
+    },
+    "val": {
+      "multi_turn_dialogue": 125,
+      "hard_composition": 125,
+      "short_turn": 125,
+      "multi_field_passage": 93
+    }
+  },
+  "axis_combo_top_distribution": {
+    "train": {
+      "ENTITY+EVENT+SPATIAL+TEMPORAL": 1955,
+      "TEMPORAL": 675,
+      "EVENT": 450,
+      "EVENT+SPATIAL+TEMPORAL": 155,
+      "ENTITY+EVENT+TEMPORAL": 145,
+      "ENTITY+EVENT+SPATIAL": 143,
+      "ENTITY+SPATIAL+TEMPORAL": 140,
+      "ENTITY+SPATIAL": 104,
+      "EVENT+TEMPORAL": 103,
+      "ENTITY+EVENT": 94
+    },
+    "val": {
+      "ENTITY+EVENT+SPATIAL+TEMPORAL": 218,
+      "TEMPORAL": 75,
+      "EVENT": 50,
+      "EVENT+SPATIAL+TEMPORAL": 17,
+      "ENTITY+EVENT+TEMPORAL": 16,
+      "ENTITY+SPATIAL+TEMPORAL": 16,
+      "ENTITY+EVENT+SPATIAL": 16,
+      "ENTITY+SPATIAL": 12,
+      "EVENT+TEMPORAL": 12,
+      "ENTITY+EVENT": 10
+    }
+  }
+}

@@ -1,0 +1,66 @@
+You are generating a multi-field personal-memory passage (SSPE-2 v6, Slice C).
+
+Output format: JSON object with fields:
+{
+  "format": "email" | "image_log" | "video_transcript",
+  "axis_combination": ["TEMPORAL", "SPATIAL", "ENTITY", "EVENT"],   // ALL 4 axes required
+  "fields": { /* format-specific structured fields */ },
+  "content": "rendered text passage"   // human-readable version of fields
+}
+
+Format-specific schemas:
+
+(1) EMAIL:
+"fields": {
+  "from": "sender@example.com",
+  "to": ["recipient@example.com"],
+  "date": "YYYY-MM-DD HH:MM",
+  "subject": "...",
+  "body": "..."
+}
+"content": full email rendered as `From: ... \nTo: ... \nDate: ... \nSubject: ...\n\n{body}`
+
+(2) IMAGE_LOG:
+"fields": {
+  "timestamp": "YYYY-MM-DD HH:MM",
+  "location": "place name (city / venue / address)",
+  "people": ["name1", "name2"],
+  "action": "named event/action",
+  "caption": "1-2 sentence description of the photographed scene",
+  "tags": ["tag1", "tag2", ...]
+}
+"content": rendered as `[{timestamp}] @ {location} | people: {people} | action: {action} | caption: {caption}`
+
+(3) VIDEO_TRANSCRIPT:
+"fields": {
+  "recorded_at": "YYYY-MM-DD HH:MM",
+  "location": "...",
+  "speakers": ["name1", "name2"],
+  "occasion": "named event",
+  "transcript": [{"timestamp": "MM:SS", "speaker": "name", "text": "..."}, ...]
+}
+"content": full transcript rendered as multi-line text
+
+Constraints:
+- All 4 axes (TEMPORAL, SPATIAL, ENTITY, EVENT) must have explicit textual anchors
+- Length: 800-2000 words (fields + content combined)
+- Realistic personal-memory subject matter (work meeting, family dinner, vacation, doctor visit, party, etc.)
+
+Few-shot example (image_log):
+
+Output:
+{
+  "format": "image_log",
+  "axis_combination": ["TEMPORAL", "SPATIAL", "ENTITY", "EVENT"],
+  "fields": {
+    "timestamp": "2023-12-22 18:45",
+    "location": "Hanok Restaurant, Insadong, Seoul",
+    "people": ["Mom", "Dad", "younger sister Jiwon", "Aunt Kyungmi"],
+    "action": "Christmas family dinner",
+    "caption": "Family gathered around the table for Christmas dinner. Mom's surprise birthday cake for Aunt Kyungmi sits in front of her, candles still lit. Aunt Kyungmi has tears in her eyes; she said she didn't expect it.",
+    "tags": ["family", "christmas", "birthday-surprise", "korean-traditional"]
+  },
+  "content": "[2023-12-22 18:45] @ Hanok Restaurant, Insadong, Seoul | people: Mom, Dad, younger sister Jiwon, Aunt Kyungmi | action: Christmas family dinner | caption: Family gathered around the table for Christmas dinner. Mom's surprise birthday cake for Aunt Kyungmi sits in front of her, candles still lit. Aunt Kyungmi has tears in her eyes; she said she didn't expect it.\n\n[Note: Aunt Kyungmi turned 60 last week. The cake was Dad's idea — he ordered it from her favorite bakery in Bukchon. Jiwon recorded a video of her reaction. We stayed at the restaurant until almost 10pm catching up about everyone's year.]"
+}
+
+Now generate ONE new multi-field passage for format={format}. Output ONLY the JSON object, no explanation or commentary.

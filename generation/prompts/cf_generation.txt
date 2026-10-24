@@ -1,0 +1,71 @@
+You are generating axis-isolated counterfactual variants of a personal-memory passage (SSPE-2 v6, CF generation).
+
+Given the positive memory below, generate {K} counterfactual versions where ONLY the {axis} information is changed. ALL other content (other axes, surrounding text, names, places, events, style, formatting) MUST be IDENTICAL to the positive.
+
+Positive memory:
+"""
+{positive_text}
+"""
+
+Axis to change: {axis}
+
+Strict per-axis token-class rules — change ONLY tokens of the specified class:
+
+- **TEMPORAL**: change ONLY date / time / year tokens (`Aug 15` → `Dec 22`, `2:30pm` → `9:15am`, `2023` → `2024`).
+  DO NOT change: actions, durations like "quarter"/"month"/"week", time-relative phrases like "yesterday" (those are different).
+  Allowed targets: numeric dates, clock times, year numbers, named months.
+
+- **SPATIAL**: change ONLY a place/location proper-noun or location phrase (`Tokyo` → `Berlin`, `Conference Room B` → `Meeting Room A`, `at home` → `at the office`).
+  DO NOT change: actions performed at the location, people present, or temporal anchors.
+  Allowed targets: city/country names, building/venue names, room names, "at home"/"at the office" phrases.
+
+- **ENTITY**: change ONLY a person's name OR a specific named object/brand (`Mom` → `Dad`, `Marcus` → `Andrew`, `phone` → `tablet`, `Toyota` → `Honda`).
+  DO NOT change: actions, activities, verbs, time periods, locations. "hiking" is an ACTION (not entity). "quarter" is a time period (not entity).
+  Allowed targets: proper nouns referring to people; common/proper nouns referring to a specific object or brand.
+
+- **EVENT**: change ONLY a noun naming an event or action-occasion (`birthday` → `graduation`, `meeting` → `interview`, `surgery` → `consultation`, `dinner` → `lunch`).
+  DO NOT change: who attended, where it happened, when it happened.
+  Allowed targets: noun phrases that name a discrete event/occasion (e.g., "the launch", "the wedding", "the kickoff").
+
+Negative examples (what NOT to do for each axis):
+
+POSITIVE: "Sarah went hiking with Mom in Yosemite on August 15."
+- Bad TEMPORAL CF (changed event): "Sarah went kayaking with Mom in Yosemite on August 15."  ← changed action, not date
+- Bad ENTITY CF (changed activity): "Sarah went kayaking with Mom in Yosemite on August 15."  ← "hiking" is an ACTION not an entity
+- Bad ENTITY CF (changed time-frame): "Sarah went hiking with Mom in Yosemite last quarter."  ← "August 15" → "last quarter" is TEMPORAL
+- Good ENTITY CF: "Sarah went hiking with Dad in Yosemite on August 15."  ← changed person only
+- Good ENTITY CF: "Andrew went hiking with Mom in Yosemite on August 15."  ← changed subject person only
+
+Hard constraints:
+1. Lexical edits ≤ 5 tokens per CF variant (minimal change)
+2. ONLY tokens belonging to the specified axis class (per the rules above) may change. Tokens belonging to other axis classes MUST be preserved verbatim.
+3. The K variants should differ from each other (distinct alternative values for the {axis})
+4. NO paraphrasing of unchanged parts. If positive says "Sarah finished the proposal at 14:30", a TEMPORAL CF would be "Sarah finished the proposal at 09:15" — DO NOT rewrite "finished the proposal" as "completed the document".
+5. Maintain all formatting: timestamps in `[YYYY-MM-DD HH:MM]` format, JSON structure if input was structured.
+6. Self-check before output: for each CF, verify that the only token-classes you altered match the target axis. If you accidentally altered an action verb in an ENTITY CF, regenerate that variant.
+
+Output format: JSON object
+{
+  "axis": "{axis}",
+  "k": K,
+  "cf_texts": ["variant 1 text", "variant 2 text", ...]
+}
+
+Few-shot example (TEMPORAL CF, K=3):
+
+Positive: "[2023-08-15 14:30] Sarah: Just finished the proposal review for the Q3 launch. Took longer than expected, but it's done."
+Axis: TEMPORAL
+K: 3
+
+Output:
+{
+  "axis": "TEMPORAL",
+  "k": 3,
+  "cf_texts": [
+    "[2023-12-22 14:30] Sarah: Just finished the proposal review for the Q3 launch. Took longer than expected, but it's done.",
+    "[2024-03-07 09:15] Sarah: Just finished the proposal review for the Q3 launch. Took longer than expected, but it's done.",
+    "[2023-06-04 18:45] Sarah: Just finished the proposal review for the Q3 launch. Took longer than expected, but it's done."
+  ]
+}
+
+Now generate {K} counterfactual variants for axis={axis}. Output ONLY the JSON object, no explanation or commentary.
