@@ -4,7 +4,7 @@
 Seoul National University · Samsung Electronics  
 EMNLP 2026
 
-[Project page](https://dohoonkim-ai.github.io/axis-lora/) · Paper (link coming soon)
+[Project page](https://dohoonkim-ai.github.io/axis-lora/) · [Paper](https://aclanthology.org/2026.emnlp-main.542/)
 
 <p align="center">
   <img src="docs/static/images/teaser.png" width="100%" alt="Axis-LoRA overview">
@@ -137,10 +137,24 @@ in `data/axiscf/`.
 ## Citation
 
 ```bibtex
-@inproceedings{kim2026axislora,
-  title     = {Axis-{LoRA}: Probing and Adapting Embedding Models for Personal-Memory Retrieval},
-  author    = {Kim, Dohoon and Park, Junho and Bae, Hyunwoong and Kim, Seyoon and Moon, Taesup},
-  booktitle = {Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
-  year      = {2026}
+@inproceedings{kim-etal-2026-axis,
+    title = "Axis-{L}o{RA}: Probing and Adapting Embedding Models for Personal-Memory Retrieval",
+    author = "Kim, Dohoon  and
+      Park, Junho  and
+      Bae, Hyunwoong  and
+      Kim, Seyoon  and
+      Moon, Taesup",
+    editor = "Lee, Hung-Yi  and
+      Dev, Sunipa  and
+      Li, Jessy  and
+      Elliott, Desmond",
+    booktitle = "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing",
+    month = oct,
+    year = "2026",
+    address = "Budapest, Hungary",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2026.emnlp-main.542/",
+    pages = "12473--12495",
+    ISBN = "979-8-89176-459-0"
 }
 ```

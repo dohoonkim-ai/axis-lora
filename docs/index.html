@@ -40,9 +40,14 @@
     .stage-card { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 1.5rem; height: 100%; text-align: left; }
     .formula { font-size: 1.15rem; color: #363636; background: #f4f6fa; border-radius: 8px; padding: 0.1rem 1.5rem; display: inline-block; margin: 1rem 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
     .formula mjx-container[display="true"] { margin: 0.7em 0 !important; }
-    .analysis-block { margin-top: 3rem; }
-    .fig-narrow { max-width: 55%; }
-    .fig-wide { max-width: 92%; }
+    /* two findings side by side; rows (title, figure, caption, text) line up across the pair */
+    .finding-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(4, auto);
+                    grid-auto-flow: column; column-gap: 2.5rem; margin-top: 3rem; }
+    .finding { display: contents; }
+    .finding h3.title { align-self: end; margin-bottom: 1rem; }
+    .finding img { max-height: 360px; max-width: 100%; width: auto; justify-self: center; align-self: center; }
+    .finding .caption { margin-top: 0.6rem; }
+    .finding-text { text-align: justify; margin-top: 1rem; }
 
     /* results */
     .results-table td, .results-table th { vertical-align: middle; text-align: center; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
@@ -65,7 +70,8 @@
     .footer { padding: 2rem 1.5rem; }
 
     @media screen and (max-width: 768px) {
-      .fig-narrow, .fig-wide { max-width: 100%; }
+      .finding-pair { display: block; }
+      .finding { display: block; margin-bottom: 2.5rem; }
       .publication-title br { display: none; }
     }
   </style>
@@ -100,10 +106,10 @@
           <div class="column has-text-centered" style="margin-top: 1rem;">
             <div class="publication-links">
               <span class="link-block">
-                <span class="button is-dark is-rounded" disabled title="Available soon">
+                <a href="https://aclanthology.org/2026.emnlp-main.542.pdf" class="button is-dark is-rounded">
                   <span class="icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg></span>
-                  <span>Paper (soon)</span>
-                </span>
+                  <span>Paper</span>
+                </a>
               </span>
               <span class="link-block">
                 <a href="https://github.com/dohoonkim-ai/axis-lora" class="button is-dark is-rounded">
@@ -206,10 +212,15 @@
         </div>
         <p class="caption">A training triplet from AxisCF: one memory and one counterfactual per axis, with the changed span underlined.</p>
 
-        <div class="analysis-block">
-          <h3 class="title is-5">An axis edit barely moves the embedding</h3>
-          <div class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.25rem;">
-            <p>
+        <div class="finding-pair">
+          <div class="finding">
+            <h3 class="title is-5">An axis edit barely moves the embedding</h3>
+            <img src="static/images/axis_blindness.png" alt="Violin plots of cosine distance between a memory and its axis counterfactual for three embedding models. TEMPORAL sits at the one-word edit floor on every model; the other axes are higher but small.">
+            <p class="caption">
+              Cosine distance between a memory and its axis counterfactual. The dashed line is the distance caused by
+              swapping one non-axis word.
+            </p>
+            <p class="finding-text">
               Across MiniLM-L6-v2, bge-base-en-v1.5, and Qwen3-Embedding-0.6B, swapping one axis moves a memory's
               embedding far less than the typical distance between two memories. TEMPORAL is the weakest axis. A date
               swap moves the embedding about as much as replacing one unrelated word, and SPATIAL, ENTITY, and EVENT
@@ -217,17 +228,14 @@
               TEMPORAL signal, but retrieval by date stays far from useful.
             </p>
           </div>
-          <img class="fig-narrow" src="static/images/axis_blindness.png" alt="Violin plots of cosine distance between a memory and its axis counterfactual for three embedding models. TEMPORAL sits at the one-word edit floor on every model; the other axes are higher but small.">
-          <p class="caption">
-            Cosine distance between a memory and its axis counterfactual. The dashed line is the distance caused by
-            swapping one non-axis word.
-          </p>
-        </div>
-
-        <div class="analysis-block">
-          <h3 class="title is-5">Axis response concentrates in the late layers</h3>
-          <div class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.25rem;">
-            <p>
+          <div class="finding">
+            <h3 class="title is-5">Axis response concentrates in the late layers</h3>
+            <img src="static/images/head_spectrum.png" alt="Heatmaps of per-layer, per-head response to axis edits for three models and four axes. Bright cells cluster in later layers. TEMPORAL and EVENT spread over many heads, SPATIAL and ENTITY over fewer.">
+            <p class="caption">
+              Per-(layer, head) response to single-token axis edits. Rows within a panel are layers (input at top),
+              columns are heads.
+            </p>
+            <p class="finding-text">
               We measure how much each attention head's pooled output changes when a single token of one axis is
               edited. On all three models the response concentrates in the later layers. How widely it spreads across
               heads depends on the axis. TEMPORAL is spread across the most heads, EVENT comes next, and SPATIAL and
@@ -235,11 +243,6 @@
               rather than post-processing its output.
             </p>
           </div>
-          <img class="fig-wide" src="static/images/head_spectrum.png" alt="Heatmaps of per-layer, per-head response to axis edits for three models and four axes. Bright cells cluster in later layers. TEMPORAL and EVENT spread over many heads, SPATIAL and ENTITY over fewer.">
-          <p class="caption">
-            Per-(layer, head) response to single-token axis edits. Rows within a panel are layers (input at top),
-            columns are heads.
-          </p>
         </div>
       </div>
     </div>
@@ -365,11 +368,25 @@
 <section class="section" id="BibTeX">
   <div class="container is-max-desktop">
     <h2 class="title is-3 has-text-centered">BibTeX</h2>
-    <pre class="bibtex"><code>@inproceedings{kim2026axislora,
-  title     = {Axis-{LoRA}: Probing and Adapting Embedding Models for Personal-Memory Retrieval},
-  author    = {Kim, Dohoon and Park, Junho and Bae, Hyunwoong and Kim, Seyoon and Moon, Taesup},
-  booktitle = {Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
-  year      = {2026}
+    <pre class="bibtex"><code>@inproceedings{kim-etal-2026-axis,
+    title = "Axis-{L}o{RA}: Probing and Adapting Embedding Models for Personal-Memory Retrieval",
+    author = "Kim, Dohoon  and
+      Park, Junho  and
+      Bae, Hyunwoong  and
+      Kim, Seyoon  and
+      Moon, Taesup",
+    editor = "Lee, Hung-Yi  and
+      Dev, Sunipa  and
+      Li, Jessy  and
+      Elliott, Desmond",
+    booktitle = "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing",
+    month = oct,
+    year = "2026",
+    address = "Budapest, Hungary",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2026.emnlp-main.542/",
+    pages = "12473--12495",
+    ISBN = "979-8-89176-459-0"
 }</code></pre>
   </div>
 </section>
